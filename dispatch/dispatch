@@ -1,0 +1,4 @@
+%% -*- mode: erlang -*-
+[
+ {admin_zmm, ["admin", "zmm"], controller_admin_zmm, []}
+].

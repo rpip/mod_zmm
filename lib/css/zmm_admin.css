@@ -1,0 +1,24 @@
+#zmm_tbl thead{
+  border-bottom: 1px solid #d5d5d5;
+  -webkit-border-radius: 0;
+     -moz-border-radius: 0;
+          border-radius: 0;
+  background-color: #eaeaea;
+}
+#zmm_tbl_body tr td {cursor: pointer}
+#zmm_install_btn {display:none}
+#zmm_tbl_body tr.to_install td, #zmm-yellow-box {background-color: #E5C37E !important;}
+ol#zmm_to_install{padding: 3px; list-style: decimal !important}
+.zmm-installed {background-color: #60b044}
+#zmm_tbl_body tr:hover td{ background-color: #ddd !important} 
+#zmm-green-box {background-color: #60b044 !important;}
+.zmm-info-box {display: inline;padding:5px; margin-right: 5px; color: #fff}
+div#zmm_tbl_pager a{cursor: pointer}
+
+tr.unpublished ul.dropdown-menu li a{color: #000 !important}
+
+
+
+
+
+
