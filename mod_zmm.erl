@@ -30,12 +30,20 @@
 
 -include_lib("zotonic.hrl").
 -include_lib("modules/mod_admin/include/admin_menu.hrl").
+-include_lib("include/mod_zmm.hrl").
 -export([
     install/2,	
     exec_zmm/3,
     update/2,
     uninstall/2
 ]).
+
+-export([cache_exists/0,
+	zmr_data/0,
+	refresh_cache/0,
+	refresh_cache/1
+	]).
+
 
 observe_admin_menu(admin_menu, Acc, Context) ->
     [
@@ -48,20 +56,14 @@ observe_admin_menu(admin_menu, Acc, Context) ->
 
 
 %% @doc Return path to the Zotonic module
--spec build_module_path(Module, #context{}) -> ModulePath when
+-spec build_module_path(Module, Context) -> ModulePath when
       Module :: string(),
+       Context :: #context{},      
       ModulePath :: string().						   
-build_module_path(Module, Context)->
-    SiteDir = z_path:site_dir(Context),
-    SiteModulePath = filename:join([SiteDir, "modules", Module]),
-    case filelib:is_dir(SiteModulePath) of 
-        true ->
-            SiteModulePath;
-        false -> 
-	    PrivDir = z_utils:lib_dir(priv),
-	    ModulePath = filename:join([PrivDir, "modules", Module]),
-            ModulePath
-    end.
+build_module_path(Module, _Context)->
+    PrivDir = z_utils:lib_dir(priv),
+    ModulePath = filename:join([PrivDir, "modules", Module]),
+    ModulePath.
 
 
 %% @doc Install a Zotonic module in the priv/modules directory
@@ -199,5 +201,39 @@ uninstall(Module, Context) ->
 	    {error, {not_found, Module}}
      end.
 
+%% @doc Return cached file containing the downloaded json data of modules
+%%      available on the Zotonic Module Repository.
+-spec cache_exists() -> {true, Data :: string()} | {false, empty}.
+cache_exists() ->
+    case filelib:file_size(?ZMM_CACHE) of
+	N when N > 0 ->
+	    {ok, Data} = file:read_file(?ZMM_CACHE),
+	    {true, Data};
+	_Empty ->
+	    {false, empty}
+    end.
 
+%% @doc Fetch modules from ZMR or the cache, if it exists.
+-spec zmr_data() -> Data when
+      Data :: string() | binary().
+zmr_data() ->
+    case mod_zmm:cache_exists() of
+	{false, _} -> 
+	    Body = refresh_cache(true),
+	    Body;
+	{true, Data} ->
+	    Data
+      end.
 
+%% @doc Refresh the local ZMR moudle list cache
+-spec refresh_cache() -> binary().
+refresh_cache()->
+    {ok, {{_HttpVer, 200, _State}, _Head, Body}} = httpc:request(?zmm_api),
+    ok = file:write_file(?ZMM_CACHE, Body).
+    
+%% @doc Refresh the local zmm module list cache and return the `new` data
+-spec refresh_cache(true) -> binary().
+refresh_cache(true)->
+    {ok, {{_HttpVer, 200, _State}, _Head, Body}} = httpc:request(?zmm_api),
+    ok = file:write_file(?ZMM_CACHE, Body),
+    Body.

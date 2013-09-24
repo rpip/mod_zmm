@@ -26,13 +26,23 @@
 ]).
 
 -include_lib("controller_html_helper.hrl").
+-include_lib("../include/mod_zmm.hrl").
 
 is_authorized(ReqData, Context) ->
     z_acl:wm_is_authorized(use, mod_zmm, ReqData, Context).
 
 
 html(Context) ->
-    Vars = [],
+    Status = z_module_manager:get_modules_status(Context),
+    Status1 = lists:flatten(
+                    [ 
+                        [ {Module, atom_to_list(State)} || {Module, _, _Pid, _Date} <- Specs ] 
+                        || {State, Specs} <- Status 
+                    ]),
+    Vars = [
+        {modules,  m_zmm:list(Context)},
+        {status, Status1}
+    ],
     Html = z_template:render("modules_index.tpl", Vars, Context),
     z_context:output(Html, Context).
 
@@ -47,5 +57,10 @@ event(#postback_notify{message="install-module"}, Context) ->
 	    z_render:growl("Installing " ++ Module, Context);
 	_Error ->
 	   z_render:growl_error(?__("Failed to install" ++ Module, Context), Context)   
-    end.
+    end;
+
+%% @doc Refresh the cache: Download the latest modules from ZMR
+event(#postback_notify{message="refresh"}, Context) ->
+    mod_zmm:refresh_cache(),
+    z_render:growl("Module list updated", Context).
 
