@@ -12,15 +12,13 @@
 <div id="zmm_tbl_menu" class="well">
   <input id="zmm_filter" type="text" placeholder="I am looking for.." class="input-xlarge pull-left">
   <div class="pull-right">
-       <span id="zmm-info-box1" class="zmm-info-box">Already Installed</span> 
-       <span id="zmm-info-box2" class="zmm-info-box">Marked for Installation</span> 
+       <span id="zmm-info-box1" class="zmm-info-box">Already Installed</span>
+       <span id="zmm-info-box2" class="zmm-info-box">Marked for Installation</span>
 
        <button class="btn btn-primary" id="zmm_refresh_btn" type="submit">{_ Refresh _}</button>
        <button class="btn btn-primary" id="zmm_install_btn" type="submit">{_ Install _}</button>
   </div>
 </div>
-
-
 
 <table class="table" id="zmm_tbl">
   <thead>
@@ -32,8 +30,8 @@
  <tbody id="zmm_tbl_body">
 {% for module in m.zmm %}
 {% if module.is_installed %}
-<tr class="zmm-installed z_module_link" data-id={{ module.title }} data-repo={{ module.repository }} > 
-        <td>{{ module.title }}</td> 
+<tr class="zmm-installed z_module_link" data-id={{ module.title }} data-repo={{ module.repository }} >
+        <td>{{ module.title }}</td>
 	<td>{{ module.repository }} </td>
                 <td>
                    <div class="pull-right">
@@ -43,16 +41,14 @@
 	            </button>
 		       <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
                         {% if module.is_active %}
-			   {% wire id=#id.title action={module_toggle module=title status_id=#status.title} 
-			      	    action={toggle_class id=#li.title class="enabled"} %}
-			  <li><a tabindex="-1" href="#" id={{ #id.title }}> Deactivate </a></li>
+			        {% wire id="st-" ++ module.title action={module_toggle module=module.title status_id=module.status} %}
+			        <li><a tabindex="-1"  id={{ "st-" ++ module.title }}> Deactivate </a></li>
                         {% else %}
-			{% wire id=#id.title action={module_toggle module=title status_id=#status.title} 
-                           action={toggle_class id=#li.title class="enabled"} %}
-                          <li><a id={{ #id.title }} tabindex="-1" href="#"> Activate </a></li>
+			        {% wire id="st-" ++ module.title action={module_toggle module=module.title status_id=module.status} %}
+                                <li><a id={{ "st-" ++ module.title }} tabindex="-1" href="#"> Activate </a></li>
                         {% endif %}
 
-			{% with "up" ++ #id.title, "re" ++ #id.title, "un" ++ #id.title as updateid, reinstallid, uninstallid %}
+                        {% with module.title ++ #id ++ "up", module.title ++ #id ++ "re", module.title ++ #id ++ "un" as updateid, reinstallid, uninstallid %}
 			   {% wire id=updateid action={module_update module=module.title} %}
 		           <li><a id={{ updateid }} tabindex="-1" href="#">Update</a></li>
 
@@ -70,8 +66,8 @@
 </tr>
 
 {% else %}
-<tr class="z_module_link" data-id={{ module.title }} data-repo={{ module.repository }} > 
-        <td>{{ module.title }}</td> 
+<tr class="z_module_link" data-id={{ module.title }} data-repo={{ module.repository }} >
+        <td>{{ module.title }}</td>
 	<td>{{ module.repository }} </td>
         <td> </td>
 </tr>
@@ -85,6 +81,3 @@
 {% lib "css/zmm_admin.css" %}
 
 {%  endblock %}
-
-
-

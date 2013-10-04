@@ -22,7 +22,6 @@
 -author("Mawuli Adzaku <mawuli@mawuli.me>").
 
 -behaviour(gen_model).
-
 %% interface functions
 -export([
     m_find_value/3,
@@ -39,7 +38,7 @@ m_find_value(value, #m{}=M, Context) ->
     m_value(M, Context);
 
 m_find_value(Key, #m{value=V} = _M, _Context) ->
-    case lists:member(Key,[title, repository, scm, is_active, is_installed]) of
+    case lists:member(Key,record_info(fields, z_module)) of
         true ->  proplists:get_value(Key,V);
         false -> undefined
     end.     
@@ -58,11 +57,21 @@ m_value(#m{value=V}, _Context) ->
 list(Context)->
     Structs = mochijson2:decode(mod_zmm:zmr_data()),
     Active = z_module_manager:active(Context),
-    AllModules = z_module_manager:all(Context),
+    %AllModules = z_module_manager:all(Context),    
+    AllModules = lists:map(fun({M,_Path}) ->
+				   M end,
+				   z_module_manager:scan(Context)),
+    Status = z_module_manager:get_modules_status(Context),
+    Status1 = lists:flatten(
+                    [ 
+                        [ {Module, atom_to_list(State)} || {Module, _, _Pid, _Date} <- Specs ] 
+                        || {State, Specs} <- Status 
+                    ]),
     Modules = [[{title, Title},
 	       {repository, Repo},
 	       {scm, SCM},
 	       {is_active, lists:member(z_convert:to_atom(Title), Active)},
-	       {is_installed, lists:member(z_convert:to_atom(Title), AllModules)}]
+	       {is_installed, lists:member(z_convert:to_atom(Title), AllModules)},
+               {status, proplists:get_value(z_convert:to_atom(Title), Status1)}]
 	       || {struct,[{<<"title">>,Title}, {<<"repository">>,Repo}, {<<"scm">>,SCM}]} <- Structs],
     Modules.

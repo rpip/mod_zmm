@@ -21,4 +21,13 @@
 %% file for caching json data from ZMR 
 -define(ZMM_CACHE, filename:join([z_utils:lib_dir(priv), "modules", ".zmm"])).
 
+%% Path to the Zotonic executable
+-define(ZOTONIC_EXE,filename:join([os:getenv("ZOTONIC"),'bin', 'zotonic'])).
+
+%% Zotonic Modules Index API
 -define(zmm_api,"http://modules.zotonic.com/api/zmr/repositories").
+
+%% module record
+-record(z_module, {title, repository, scm, is_active, is_installed}).
+
+

@@ -33,15 +33,8 @@ is_authorized(ReqData, Context) ->
 
 
 html(Context) ->
-    Status = z_module_manager:get_modules_status(Context),
-    Status1 = lists:flatten(
-                    [ 
-                        [ {Module, atom_to_list(State)} || {Module, _, _Pid, _Date} <- Specs ] 
-                        || {State, Specs} <- Status 
-                    ]),
     Vars = [
-        {modules,  m_zmm:list(Context)},
-        {status, Status1}
+        {modules,  m_zmm:list(Context)}
     ],
     Html = z_template:render("modules_index.tpl", Vars, Context),
     z_context:output(Html, Context).
