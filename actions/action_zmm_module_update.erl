@@ -38,7 +38,7 @@ render_action(TriggerId, TargetId, Args, Context) ->
 %% @doc Process 'module_update' event triggered on the clientside
 %% @spec event(Event, Context1) -> Context2
 event(#postback{message={module_update, Module}, trigger=_TriggerId}, Context) ->
-    Module1 = atom_to_list(Module),
+    Module1 = z_convert:to_list(Module),
     case z_acl:is_allowed(use, mod_admin_modules, Context) of
 	true ->
 	    case mod_zmm:update(Module1, Context) of

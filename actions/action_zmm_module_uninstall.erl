@@ -41,7 +41,7 @@ render_action(TriggerId, TargetId, Args, Context) ->
       Context1 :: #context{},
       Context2 :: #context{}.
 event(#postback{message={module_uninstall, Module}, trigger=_TriggerId}, Context) ->
-    Module1 = atom_to_list(Module),
+    Module1 = z_convert:to_list(Module),
     z_render:growl("Uninstalling " ++ Module1, Context),
     case z_acl:is_allowed(use, mod_admin_modules, Context) of
 	true ->
