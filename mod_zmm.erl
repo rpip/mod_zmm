@@ -19,18 +19,16 @@
 
 -module(mod_zmm).
 -author('Mawuli Adzaku <mawuli@mawuli.me>').
-
-%& Module metadata
 -mod_title("Zotonic Module Manager").
 -mod_description("Web interface for managing Zotonic modules").
-%-mod_depends([]).
-% zotonic/priv/modules path for the modules installed from there.
 -mod_prio(500).
--export([observe_admin_menu/3]).
+-mod_depends([mod_admin_modules]).
 
 -include_lib("zotonic.hrl").
 -include_lib("modules/mod_admin/include/admin_menu.hrl").
 -include_lib("include/mod_zmm.hrl").
+
+-export([observe_admin_menu/3]).
 -export([
     install/2,	
     exec_zmm/3,
@@ -78,39 +76,32 @@ install(Module, Context) ->
         true ->
             {error, {already_exists, Module}};
         false ->
-            Arg = z_utils:os_escape(Module),
-            erlang:spawn(z_module_manager, exec_zmm, [install, Arg, Context]),
+            Module1 = z_utils:os_escape(Module),
+            erlang:spawn(?MODULE, exec_zmm, [install, Module1, Context]),
 	    {ok, Module}
      end.
 	    	
-%% @doc Return path to the module manager script
--spec get_path_to_zmm() -> Path when
-      Path :: string().
-get_path_to_zmm() ->
-    filename:join([os:getenv("ZOTONIC"),'bin', 'zmm']).
-
 %% @doc Execute external shell command.
 %% Command is run in a separate process/space.
--spec exec_zmm(Action, Arg, Context) -> Result when
+-spec exec_zmm(Action, Args, Context) -> Result when
     Action :: update | install,
-    Arg :: string(),
+    Args :: [string()],
     Context :: #context{},
     Result :: ok | {error, timeout}.
-exec_zmm(install, Arg, Context) when is_list(Arg) ->
-    Cmd = get_path_to_zmm() ++ " install " ++ Arg,
-    cmd(Cmd, 30000, Context);
-exec_zmm(update, Arg, Context) ->
-    Cmd = get_path_to_zmm() ++ " update " ++ Arg,
-    cmd(Cmd, 30000, Context).
+exec_zmm(install, Args, Context) when is_list(Args) ->
+    cmd(["install", Args], Context);
+exec_zmm(update, Args, Context) ->
+    cmd(["update", Args], Context).
 
 %% @doc Run a shell command
--spec cmd(Cmd, Timeout, _Context) -> Result when
-      Cmd :: string(),
-      Timeout :: integer(),
+-spec cmd(Args, _Context) -> Result when
+      Args :: [string()],
       Result :: ok | {error, timeout}.
-cmd(Cmd, Timeout, _Context) ->
-    Port = erlang:open_port({spawn, Cmd},[exit_status]),
-    try loop(Port,[], Timeout) of
+cmd(Args, _Context) ->
+    Args1 = ["modules"] ++ Args,
+    Port = erlang:open_port({spawn_executable, ?ZOTONIC_EXE},
+                            [stderr_to_stdout, exit_status, {args, Args1}]),
+    try loop(Port,[], 3000) of
        {done, _Data} ->	    
            ok
     catch
@@ -141,7 +132,7 @@ loop(Port, Data, Timeout) ->
       Path :: string().
 del_dir(Path) ->
     case file:del_dir(Path) of
-        {error, eexist} ->
+        {error, _NotFound} ->
             ok = del_files(Path),
             ok = file:del_dir(Path);
         ok ->
@@ -173,7 +164,7 @@ del_files(Dir, [Filename | Rest]) ->
       Result :: {ok, list()}.
 update(Module, Context) ->
     Arg = z_utils:os_escape(Module),
-    spawn(z_module_manager, exec_zmm, [update, Arg, Context]),
+    spawn(?MODULE, exec_zmm, [update, Arg, Context]),
     {ok, Module}.
 
 
@@ -188,7 +179,7 @@ uninstall(Module, Context) ->
         true ->
 	    case z_module_manager:whereis(Module, Context) of
 		{ok, _Pid} ->
-		    z_module_manager:deactivate(Module, Context);
+		    mod_zmm:deactivate(Module, Context);
 		{error, not_running} ->
 		    not_running
 	    end,
