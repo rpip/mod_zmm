@@ -1,0 +1,34 @@
+-*- mode: org -*-
+
+* Zotonic module manager
+** TODOs
+- TODO refactor codebase
+- TODO Lock site module deps with "deps.lock" like mix lock files
+- TODO npm style output: ANSI colours, and verbose etc
+- TODO Integrate either epax or mad
+- TODO download by branch, commit hash
+- TODO cache downloaded files
+- TODO Upload new website: Heroku and get the database dump from Arjan
+- TODO Update REST API
+- TODO Add dependency solver
+- TODO Register module from CLI
+  For example: zmm register packageName git://your/git/url.git
+
+** IDEAS
+- EPM: https://github.com/jkvor/epm
+Currently, Zotonic has no way of specifying the modules required to run a site. I think dependency (or package) management should be added to Zotonic for at least two reasons:
+
+    When other developers check out a site, they can install all its modules by enabling the site (or perhaps running a console command) instead of manually following steps in a readme.
+    When the site is deployed to production, its modules can be installed automatically.
+
+A proposal (as discussed with @arjan) is to take the install_modules section in the site config more seriously by:
+
+    actually installing the modules that are listed there
+    adding the possibility to specify a Git repository for unofficial modules
+    adding version requirements (either a tag or a commit hash for untagged material).
+
+Cf. for instance how Composer, the PHP package manager, defines requirements. Bower does something similar for frontend dependencies, and package.json for NPM.
+- UI: http://codingstyleguide.com
+- different build/custom script for certain dependencies, in cases
+  such as https://github.com/zotonic/zotonic/issues/800#issuecomment-53527759.
+  Also see related discussion: https://github.com/zotonic/zotonic/pull/515
